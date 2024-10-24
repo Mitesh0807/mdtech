@@ -4,33 +4,54 @@ import { useState } from "react";
 import { login } from "@/actions/login";
 import { signup } from "@/actions/signup";
 import { resetPassword } from "@/actions/resetPassword";
+import { useRouter } from "next/navigation";
+import { Toaster, toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function AuthFormsComponent() {
+export default function AuthForms() {
   const [activeTab, setActiveTab] = useState("login");
+  const router = useRouter();
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    await login(formData);
+    try {
+      await login(formData);
+      toast.success("Logged in successfully");
+      router.push("/dashboard");
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message);
+      }
+      toast.error("Login failed. Please try again.");
+    }
   };
 
   const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    await signup(formData);
+    try {
+      await signup(formData);
+      toast.success("Account created successfully");
+      router.push("/dashboard");
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message);
+      }
+      toast.error("Sign up failed. Please try again.");
+    }
   };
 
   const handleResetPassword = async (
@@ -38,7 +59,21 @@ export function AuthFormsComponent() {
   ) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    await resetPassword(formData);
+
+    try {
+      const response = await resetPassword(formData);
+      if (response.errors) {
+        toast.error(Object.values(response.errors).flat().join(", "));
+        return;
+      }
+      toast.success("Password reset successfully");
+      setActiveTab("login");
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message);
+      }
+      toast.error("Password reset failed. Please try again.");
+    }
   };
 
   return (
@@ -78,6 +113,10 @@ export function AuthFormsComponent() {
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="signup-name">Name</Label>
+                  <Input id="signup-name" name="name" type="text" required />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input id="signup-email" name="email" type="email" required />
                 </div>
@@ -102,6 +141,15 @@ export function AuthFormsComponent() {
                   <Input id="reset-email" name="email" type="email" required />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="old-password">Current Password</Label>
+                  <Input
+                    id="old-password"
+                    name="oldPassword"
+                    type="password"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="new-password">New Password</Label>
                   <Input
                     id="new-password"
@@ -123,6 +171,7 @@ export function AuthFormsComponent() {
           </Button>
         </CardFooter>
       </Card>
+      <Toaster />
     </div>
   );
 }

@@ -3,11 +3,14 @@ import { z } from "zod";
 import { db } from "@/db/connection";
 import { users } from "@/db/schema";
 import bcrypt from "bcrypt";
-import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 const resetPasswordSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }).trim(),
+  oldPassword: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .trim(),
   newPassword: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" })
@@ -23,23 +26,31 @@ export async function resetPassword(formData: FormData) {
     };
   }
 
-  const { email, newPassword } = result.data;
+  const { email, oldPassword, newPassword } = result.data;
 
+  // Find user by email
   const user = await db.query.users.findFirst({
     where: eq(users.email, email),
   });
+
   if (!user) {
-    return { errors: { email: ["Email not found"] } };
+    return { errors: { email: ["User not found"] } };
   }
 
+  // Verify old password
+  const passwordMatch = await bcrypt.compare(oldPassword, user.password);
+
+  if (!passwordMatch) {
+    return { errors: { oldPassword: ["Current password is incorrect"] } };
+  }
+
+  // Hash and update new password
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   await db
     .update(users)
-    .set({
-      password: hashedPassword,
-    })
+    .set({ password: hashedPassword })
     .where(eq(users.email, email));
 
-  redirect("/login");
+  return { message: "Password reset successfully" };
 }

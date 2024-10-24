@@ -7,11 +7,9 @@ import { redirect } from "next/navigation";
 import { eq } from 'drizzle-orm';
 
 const signupSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }).trim(),
   email: z.string().email({ message: "Invalid email address" }).trim(),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters" })
-    .trim(),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }).trim(),
 });
 
 export async function signup(formData: FormData) {
@@ -22,7 +20,7 @@ export async function signup(formData: FormData) {
     };
   }
 
-  const { email, password } = result.data;
+  const { name, email, password } = result.data;
 
   try {
     const existingUser = await db.query.users.findFirst({
@@ -36,9 +34,9 @@ export async function signup(formData: FormData) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.insert(users).values({
+      name,
       email,
       password: hashedPassword,
-      name: email.split('@')[0],
     });
 
     redirect("/login");
