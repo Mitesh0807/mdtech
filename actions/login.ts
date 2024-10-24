@@ -4,11 +4,15 @@ import { createSession, decrypt, deleteSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { db } from "@/db/connection";
 import { users } from "@/db/schema";
-import { eq } from 'drizzle-orm';
-import bcrypt from 'bcrypt';
+import { eq } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }).trim().toLowerCase(),
+  email: z
+    .string()
+    .email({ message: "Invalid email address" })
+    .trim()
+    .toLowerCase(),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" })
@@ -45,17 +49,15 @@ export async function login(formData: FormData) {
       return { errors: { email: ["Invalid email or password"] } };
     }
 
-
     await createSession(user.id.toString());
-
 
     redirect("/dashboard");
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return {
       errors: {
-        _form: ["An error occurred during login. Please try again."]
-      }
+        _form: ["An error occurred during login. Please try again."],
+      },
     };
   }
 }
@@ -65,7 +67,7 @@ export async function logout() {
     await deleteSession();
     redirect("/login");
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     redirect("/login");
   }
 }
@@ -73,6 +75,7 @@ export async function logout() {
 export async function checkAuth() {
   try {
     const session = await decrypt();
+
     if (!session) {
       redirect("/login");
     }
@@ -86,6 +89,8 @@ export async function checkAuth() {
       },
     });
 
+    console.log(user, "user");
+
     if (!user) {
       await deleteSession();
       redirect("/login");
@@ -93,7 +98,36 @@ export async function checkAuth() {
 
     return user;
   } catch (error) {
-    await deleteSession();
+    console.log(error, "message");
+    // await deleteSession();
     redirect("/login");
   }
 }
+
+// export async function checkAuth() {
+//   try {
+//     const session = await decrypt();
+//     if (!session) {
+//       redirect("/login");
+//     }
+//
+//     const user = await db.query.users.findFirst({
+//       where: eq(users.id, Number(session.userId)),
+//       columns: {
+//         id: true,
+//         email: true,
+//         name: true,
+//       },
+//     });
+//
+//     if (!user) {
+//       await deleteSession();
+//       redirect("/login");
+//     }
+//
+//     return user;
+//   } catch (error) {
+//     await deleteSession();
+//     redirect("/login");
+//   }
+// }

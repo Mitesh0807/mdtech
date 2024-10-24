@@ -1,4 +1,6 @@
+"use server";
 import "server-only";
+
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
@@ -17,6 +19,7 @@ export async function createSession(userId: string) {
 }
 
 export async function deleteSession() {
+  "use server";
   cookies().delete("session");
 }
 
@@ -33,13 +36,18 @@ export async function encrypt(payload: SessionPayload) {
     .sign(encodedKey);
 }
 
-export async function decrypt(session: string | undefined = ""): Promise<SessionPayload | null> {
+export async function decrypt(
+  session?: string,
+): Promise<SessionPayload | null> {
   try {
-    if (!session) {
+    const cookieStore = cookies();
+    const sessionCookie = session || cookieStore.get("session")?.value;
+
+    if (!sessionCookie) {
       return null;
     }
 
-    const { payload } = await jwtVerify(session, encodedKey, {
+    const { payload } = await jwtVerify(sessionCookie, encodedKey, {
       algorithms: ["HS256"],
     });
 
@@ -48,7 +56,7 @@ export async function decrypt(session: string | undefined = ""): Promise<Session
       expiresAt: new Date(payload.expiresAt as string),
     };
   } catch (error) {
-    console.error('Failed to verify session:', error);
+    console.error("Failed to verify session:", error);
     return null;
   }
 }
@@ -72,7 +80,7 @@ export async function getSession(): Promise<SessionPayload | null> {
 
     return session;
   } catch (error) {
-    console.error('Failed to get session:', error);
+    console.error("Failed to get session:", error);
     return null;
   }
 }
@@ -91,15 +99,15 @@ export async function refreshSession(userId: string) {
     await deleteSession();
     return await createSession(userId);
   } catch (error) {
-    console.error('Failed to refresh session:', error);
-    return { success: false, error: 'Failed to refresh session' };
+    console.error("Failed to refresh session:", error);
+    return { success: false, error: "Failed to refresh session" };
   }
 }
 
 export async function requireAuth() {
   const session = await getSession();
   if (!session) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
   return session;
 }

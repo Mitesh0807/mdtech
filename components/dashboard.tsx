@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,33 +9,11 @@ import { Button } from "@/components/ui/button";
 interface User {
   name: string;
   email: string;
-  avatar: string;
 }
 
-export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+export default function Dashboard({ user }: { user: User }) {
   const router = useRouter();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/user");
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-        const userData = await response.json();
-        setUser(userData);
-      } catch (error) {
-        if (error instanceof Error) {
-          console.log(error.message);
-        }
-        toast.error("Failed to fetch user data");
-        router.push("/login");
-      }
-    };
-
-    fetchUser();
-  }, []);
+  console.log(user, "user");
 
   const handleLogout = () => {
     toast.success("Logged out successfully");
@@ -55,7 +32,7 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4">
           <Avatar className="h-24 w-24">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <h2 className="text-xl font-semibold">{user.name}</h2>
