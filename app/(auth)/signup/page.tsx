@@ -1,4 +1,4 @@
-"use client"; // Add this line to make the component a Client Component
+"use client";
 
 import { signup } from "@/actions/signup";
 
