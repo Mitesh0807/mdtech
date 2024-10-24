@@ -20,13 +20,16 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch('/api/user');
+        const response = await fetch("/api/user");
         if (!response.ok) {
-          throw new Error('Failed to fetch user data');
+          throw new Error("Failed to fetch user data");
         }
         const userData = await response.json();
         setUser(userData);
       } catch (error) {
+        if (error instanceof Error) {
+          console.log(error.message);
+        }
         toast.error("Failed to fetch user data");
         router.push("/login");
       }
