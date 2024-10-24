@@ -1,3 +1,4 @@
+'use client'
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -10,8 +11,15 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { login } from "@/actions/login"
 
 export function LoginForm() {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    await login(formData);
+  };
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
@@ -21,6 +29,7 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+      <form onSubmit={handleSubmit}>
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
@@ -28,6 +37,7 @@ export function LoginForm() {
               id="email"
               type="email"
               placeholder="m@example.com"
+              name="email"
               required
             />
           </div>
@@ -38,7 +48,7 @@ export function LoginForm() {
                 Forgot your password?
               </Link>
             </div>
-            <Input id="password" type="password" required />
+            <Input id="password" name="password" type="password" required />
           </div>
           <Button type="submit" className="w-full">
             Login
@@ -46,7 +56,8 @@ export function LoginForm() {
           <Button variant="outline" className="w-full">
             Login with Google
           </Button>
-        </div>
+          </div>
+        </form>
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link href="#" className="underline">
